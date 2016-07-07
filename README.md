@@ -1,4 +1,4 @@
-# BkgdSyst
+B0;95;0c# BkgdSyst
 
 We're going to calculate your background systematics, and we're going to do a fine job of it.
 
@@ -13,7 +13,7 @@ To run, you'll want to point `tfSyst.py` at the necessary config files like in t
 
 ```
 python BkgdSysts/python/tfSyst.py \
-        --cutstrings BkgdSysts/cutstrings/multib_ichep2k16_regions.json \
+       --cutstrings BkgdSysts/cutstrings/multib_ichep2k16_regions.json \
        --systs BkgdSysts/config/multib_ichep2k16_ttbar.json \
        --input '/faxbox2/user/user/mleblanc/multib_ichep2k16/hf_tag2.4.11-1-0/optin/*.root'
 ```
