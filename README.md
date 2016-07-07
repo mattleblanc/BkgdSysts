@@ -1,4 +1,4 @@
-B0;95;0c# BkgdSyst
+# BkgdSyst
 
 We're going to calculate your background systematics, and we're going to do a fine job of it.
 
