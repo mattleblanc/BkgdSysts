@@ -36,27 +36,43 @@ for syst in systematics:
                 dids.append(did)
 
 files = {}
+trees = {}
 for fname in glob.glob(options.input):
     for did in dids:
         if(string.find(fname,did)>=0):
             logging.info("BkgdSyst\tfname is \t%s\t for did\t%s",fname,did)
-            files[did]=fname
+            files[did]=ROOT.TFile.Open(fname)
+            trees[did]=files[did].Get('nominal')
+        
+for did in trees:
+    logging.info("Tree for DID\t%s\thas\t%s\tentries.",did,trees[did].GetEntries())
 
 # Loop over the different regions.
-for syst in systematics:
-    logging.info("BkgdSyst\tsyst\t%s",syst)
-    for variation in systematics[syst]:
-        logging.info("BkgdSyst\tvariation\t%s",variation) 
-        for region in cutstrings:
-            logging.info("BkgdSyst\t\tregion\t%s",region)
-            for subreg in cutstrings[region]:
+for region in cutstrings:
+    logging.info("region\t\t%s",region)
+    #hist = ROOT.TH1F(syst+"_"+region,syst+"_"+region,100,0,100)
+    for (syst,sets) in systematics.items():
+        for (scheme,samples) in sets.items():
+            logging.info("syst\t\t\t%s\t(%s)",syst,scheme)
+
+            for (subreg,cuts) in cutstrings[region].items():
                 regtype="NULL"
                 # string.find returns -1 if not match, or the index of the position of the match if there is one:
                 # 0 means the string starts with the match!
+                
                 if string.find(subreg,"SR")>=0 :
                     regtype="SR"
                 if string.find(subreg,"CR")>=0 :
                     regtype="CR"
                 if string.find(subreg,"VR")>=0 :
                     regtype="VR"
-                logging.info("BkgdSyst\t\t\tsubreg\t%s",regtype)
+                        
+                logging.info("Region Type\t\t\t%s",regtype)
+                        
+                # So, we want to know the yield for each of those regions, in each sample:
+                for did in trees:
+                    if(did in samples):
+                        nEvents = trees[did].GetEntries(cuts)
+                        logging.info("DID\t\t\t\t\t%s\t%s",did,nEvents)
+                    
+                    
