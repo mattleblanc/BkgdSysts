@@ -10,19 +10,12 @@ logging.basicConfig(level=logging.INFO)
 logging.info("Calculating transfer factor systematics . . .")
 
 def apply_selection(tree, cuts, eventWeightBranch):
-    # use a global canvas
-    #global canvas
     canvas = ROOT.TCanvas('test', 'test', 200, 10, 100, 100)
-    #selection = cuts_to_selection(cuts)
-    # draw with selection
     tree.Draw(eventWeightBranch, '{0:s}*{1:s}'.format(cuts,eventWeightBranch))
-    # raw and weighted counts
-    rawCount = 0
     weightedCount = 0
     # get drawn histogram
     if 'htemp' in canvas:
       htemp = canvas.GetPrimitive('htemp')
-      rawCount = htemp.GetEntries()
       weightedCount = htemp.Integral()
     canvas.Clear()
     return weightedCount
