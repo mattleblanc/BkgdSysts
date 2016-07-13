@@ -7,8 +7,25 @@ import ROOT
 from optparse import OptionParser
 
 logging.basicConfig(level=logging.INFO)
-
 logging.info("Calculating transfer factor systematics . . .")
+
+def apply_selection(tree, cuts, eventWeightBranch):
+    # use a global canvas
+    #global canvas
+    canvas = ROOT.TCanvas('test', 'test', 200, 10, 100, 100)
+    #selection = cuts_to_selection(cuts)
+    # draw with selection
+    tree.Draw(eventWeightBranch, '{0:s}*{1:s}'.format(cuts,eventWeightBranch))
+    # raw and weighted counts
+    rawCount = 0
+    weightedCount = 0
+    # get drawn histogram
+    if 'htemp' in canvas:
+      htemp = canvas.GetPrimitive('htemp')
+      rawCount = htemp.GetEntries()
+      weightedCount = htemp.Integral()
+    canvas.Clear()
+    return weightedCount
 
 # Parse command-line arguments from the user ...
 parser = OptionParser()
@@ -16,6 +33,7 @@ parser.add_option("--cutstrings", help="JSON file containing regions and cutstri
                   default="${ROOTCOREBIN}/../BkgdSysts/cutstrings/multib_ichep2k16_regions.json")
 parser.add_option("--systs", help="JSON file which contains the systematics to compute.",
                   default="${ROOTCOREBIN}/../BkgdSysts/config/multib_ichep2k16_ttbar.json")
+parser.add_option("--weights", help="String of weights to apply for each event", default="1.0")
 parser.add_option("--input", help="Directory of input ROOT files", default="${ROOTCOREBIN}/../BkgdSysts/input/")
 parser.add_option("--output", help="Directory of output files", default="${ROOTCOREBIN}/../BkgdSysts/output/")
 parser.add_option("--systfile", help="Name of output .root file with systematics", default="bkgsyst.root")
@@ -84,7 +102,9 @@ for (syst,sets) in systematics.items():
                 nEvents=0.0
                 for did in trees:
                     if(did in samples):
-                        nEvents += trees[did].GetEntries(cuts)
+                        #nEvents += trees[did].GetEntries(cuts+options.weights)
+                        #print apply_selection(trees[did],cuts,options.weights)
+                        nEvents += apply_selection(trees[did],cuts,options.weights)
                         yields[regtype] = nEvents
                         
                 if(options.verbose): logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
