@@ -1,7 +1,5 @@
 # BkgdSyst
 
-We're going to calculate your background systematics, and we're going to do a fine job of it.
-
 To check the package out, do
 
 ```
