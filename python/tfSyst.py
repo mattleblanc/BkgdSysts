@@ -6,8 +6,11 @@ import glob
 import ROOT
 from optparse import OptionParser
 
+ROOT.gROOT.SetBatch(True)
 logging.basicConfig(level=logging.INFO)
 logging.info("Calculating transfer factor systematics . . .")
+
+global canvas
 
 def apply_selection(tree, cuts, eventWeightBranch):
     canvas = ROOT.TCanvas('test', 'test', 200, 10, 100, 100)
