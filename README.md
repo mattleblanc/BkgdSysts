@@ -1,4 +1,4 @@
-# BkgdSyst
+# BkgdSysts
 
 To check the package out, do
 
