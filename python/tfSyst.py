@@ -48,13 +48,19 @@ for did in trees:
     logging.info("Tree for DID\t%s\thas\t%s\tentries.",did,trees[did].GetEntries())
 
 # Loop over the different regions.
-for region in cutstrings:
-    logging.info("region\t\t%s",region)
-    #hist = ROOT.TH1F(syst+"_"+region,syst+"_"+region,100,0,100)
-    for (syst,sets) in systematics.items():
-        for (scheme,samples) in sets.items():
-            logging.info("syst\t\t\t%s\t(%s)",syst,scheme)
 
+outfile = ROOT.TFile("output/bkgsyst.root","recreate")
+
+for (syst,sets) in systematics.items():
+    logging.info("syst\t\t%s",syst)
+    hist = ROOT.TH1F(syst,syst,50,0,49)
+
+    for region in cutstrings:
+        logging.info("region\t\t%s",region)
+    
+        tfs = {}
+        for (scheme,samples) in sets.items():
+            yields = {}
             for (subreg,cuts) in cutstrings[region].items():
                 regtype="NULL"
                 # string.find returns -1 if not match, or the index of the position of the match if there is one:
@@ -70,9 +76,35 @@ for region in cutstrings:
                 logging.info("Region Type\t\t\t%s",regtype)
                         
                 # So, we want to know the yield for each of those regions, in each sample:
+                nEvents=0.0
                 for did in trees:
                     if(did in samples):
-                        nEvents = trees[did].GetEntries(cuts)
-                        logging.info("DID\t\t\t\t\t%s\t%s",did,nEvents)
-                    
-                    
+                        nEvents += trees[did].GetEntries(cuts)
+                        yields[regtype] = nEvents
+                        
+                logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
+
+            for (reg,nEvents) in yields.items():
+                if(reg != "CR" and yields["CR"]!=0):
+                    tfs[scheme] = yields[reg]/yields["CR"]
+                    #hist.Fill(syst+"_"+region+"_"+subreg+"_"+scheme,yields[reg]/yields["CR"])
+                elif(reg != "CR" and yields["CR"]==0):
+                    tfs[scheme] = -1
+                    #hist.Fill(syst+"_"+region+"_"+subreg+"_"+scheme,-1)
+
+        #for (scheme,tf) in tfs.items():
+        if "varied" in tfs:
+            hist.Fill(region,tfs["varied"]/tfs["nominal"])
+        elif "varyUp" and "varyDown" in tfs:   
+            hist.Fill(region,tfs["varyUp"]/tfs["varyDown"])
+
+    hist.SetStats(0)
+    hist.GetXaxis().SetTitle("Region")
+    hist.GetYaxis().SetTitle("Percent Uncertainty")
+
+    hist.Draw("hist")
+    hist.Write();
+    hist.SaveAs("output/"+syst+".pdf")
+
+outfile.Write()
+outfile.Close()
