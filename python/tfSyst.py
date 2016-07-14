@@ -4,9 +4,12 @@ import json
 import string
 import glob
 import ROOT
+from ROOT import gROOT,gPad,gStyle,TCanvas,TFile,TLine,TLatex,TAxis,TLegend,TPostScript
 from optparse import OptionParser
+from math import fabs
 
 ROOT.gROOT.SetBatch(True)
+ROOT.gStyle.SetOptTitle(False)
 logging.basicConfig(level=logging.INFO)
 logging.info("Calculating transfer factor systematics . . .")
 
@@ -33,7 +36,8 @@ parser.add_option("--weights", help="String of weights to apply for each event",
 parser.add_option("--input", help="Directory of input ROOT files", default="${ROOTCOREBIN}/../BkgdSysts/input/")
 parser.add_option("--output", help="Directory of output files", default="${ROOTCOREBIN}/../BkgdSysts/output/")
 parser.add_option("--systfile", help="Name of output .root file with systematics", default="bkgsyst.root")
-parser.add_option("--verbose",action='store_true', help="Verbose output?", dest="verbose")
+parser.add_option("--atlas", action='store_true', help="Add ATLAS labels to output plots?", dest="atlas")
+parser.add_option("--verbose", action='store_true', help="Verbose output?", dest="verbose")
 
 (options, args) = parser.parse_args()
 
@@ -70,7 +74,7 @@ outfile = ROOT.TFile(options.output+options.systfile,"recreate")
 
 for (syst,sets) in systematics.items():
     logging.info("syst\t%s",syst)
-    hist = ROOT.TH1F(syst,syst,28,0,27)
+    hist = ROOT.TH1F(syst,syst,21,0.0,21)
 
     for region in cutstrings:
         logging.info("region\t\t%s",region)
@@ -106,26 +110,45 @@ for (syst,sets) in systematics.items():
                 if(options.verbose): logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
 
             for (reg,nEvents) in yields.items():
-                if(reg != "CR" and yields["CR"]!=0):
-                    tfs[scheme] = yields[reg]/yields["CR"]
-                    #hist.Fill(syst+"_"+region+"_"+subreg+"_"+scheme,yields[reg]/yields["CR"])
-                elif(reg != "CR" and yields["CR"]==0):
-                    tfs[scheme] = -1
-                    #hist.Fill(syst+"_"+region+"_"+subreg+"_"+scheme,-1)
+                if(reg == "CR"): continue
+                tfs[scheme+"_"+region+"_"+reg] = yields[reg]/yields["CR"]
 
-            for (reg,nEvents) in yields.items():
-                if "varied" in tfs:
-                    hist.Fill(region+"_"+reg,tfs["varied"]/tfs["nominal"])
-                elif "varyUp" and "varyDown" in tfs:   
-                    hist.Fill(region+"_"+reg,tfs["varyUp"]/tfs["varyDown"])
+        iBin=0
+        for (reg,nEvents) in yields.items():
+            if(reg=="CR"): continue
+            if "varied_"+region+"_"+reg in tfs:
+                hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
+            elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
+                hist.Fill(region+"_"+reg,fabs(tfs["varyUp"]/tfs["varyDown"])*100.0)
 
     hist.SetStats(0)
     hist.GetXaxis().SetTitle("Region")
+    hist.GetXaxis().SetTitleOffset(1.33)
+    hist.GetYaxis().SetTitleOffset(1.33)
     hist.GetYaxis().SetTitle("Percent Uncertainty")
+    hist.SetMarkerStyle(5)
+    hist.SetMarkerSize(1)
 
-    hist.Draw("hist")
+    canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 800, 600)
+    pad = ROOT.TPad()
+    canvas.cd()
+    hist.Draw("hist P")
+    if(options.atlas):
+        l=TLatex()
+        l.SetNDC()
+        l.SetTextFont(72)
+        l.DrawLatex(0.15,0.85,"ATLAS")
+        p=TLatex()
+        p.SetNDC();
+        p.SetTextFont(42)
+        p.DrawLatex(0.28,0.85,"Internal");
+        q=TLatex()
+        q.SetNDC();
+        p.SetTextFont(41)
+        q.DrawLatex(0.15,0.80,syst);
+
     hist.Write();
-    hist.SaveAs("output/"+syst+".pdf")
+    canvas.SaveAs("output/"+syst+".pdf")
 
 outfile.Write()
 outfile.Close()
