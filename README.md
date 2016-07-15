@@ -1,6 +1,6 @@
 # BkgdSysts
 
-This is a small utility which will hopefully make computing "theoretical" systematic uncertainties on various background processes a little bit easier. For example, this kind of comparison is pretty commonly done withing the [ATLAS experiment](http://atlas.web.cern.ch/Atlas/Collaboration/) SUSY working group.
+This is a small utility which will hopefully make computing "theoretical" systematic uncertainties on various background processes a little bit easier. For example, this kind of comparison is pretty commonly done within the [ATLAS experiment](http://atlas.web.cern.ch/Atlas/Collaboration/) SUSY working group.
 
 To check the package out, do
 
