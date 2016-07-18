@@ -60,7 +60,6 @@ systematics = json.load(open(options.systs));
 logging.info("Found %d region definitions.",len(cutstrings))
 
 # Open all the files ...
-
 dids = []
 for syst in systematics:
     # Open all the files we need ...
@@ -82,7 +81,6 @@ for did in trees:
     if(options.verbose): logging.info("Tree for DID\t%s\thas\t%s\tentries.",did,trees[did].GetEntries())
 
 # Loop over the different regions.
-
 lumiweights = json.load(open(options.lumi_weights))
 outfile = ROOT.TFile(options.output+options.systfile,"recreate")
 
@@ -118,8 +116,6 @@ for (syst,sets) in systematics.items():
                 for did in trees:
                     lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
-                        #nEvents += trees[did].GetEntries(cuts+options.weights)
-                        #print apply_selection(trees[did],cuts,options.weights)
                         nEvents += apply_selection(trees[did],cuts,options.event_weights)
                         nEvents*=lumi
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
@@ -150,7 +146,6 @@ for (syst,sets) in systematics.items():
     hist.SetMarkerSize(1)
 
     canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 1400, 1050)
-#    canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 5000, 1050)
     pad = ROOT.TPad()
     canvas.cd()
     hist.Draw("hist P")
