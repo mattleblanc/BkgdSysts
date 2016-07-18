@@ -2,7 +2,8 @@
 
 *~
 #*#
-input/*
+input*/*
 .DS_Store
 *.pdf
 config/multib_ichep2k16_test.json
+output*/*
