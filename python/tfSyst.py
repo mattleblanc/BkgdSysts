@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import re
 import string
 import glob
 import ROOT
@@ -26,13 +27,25 @@ def apply_selection(tree, cuts, eventWeightBranch):
     canvas.Clear()
     return weightedCount
 
+def get_scaleFactor(did, weights):
+  scaleFactor = 1.0
+  cutflow = weights[did[:6]].get('numevents')
+  if cutflow == 0:
+    raise ValueError('Num events = 0!')
+  scaleFactor /= cutflow
+  scaleFactor *= weights[did[:6]].get('cross section')
+  scaleFactor *= weights[did[:6]].get('filter efficiency')
+  scaleFactor *= weights[did[:6]].get('k-factor')
+  return scaleFactor
+
 # Parse command-line arguments from the user ...
 parser = OptionParser()
 parser.add_option("--cutstrings", help="JSON file containing regions and cutstrings which define them.",
                   default="${ROOTCOREBIN}/../BkgdSysts/cutstrings/multib_ichep2k16_regions.json")
 parser.add_option("--systs", help="JSON file which contains the systematics to compute.",
                   default="${ROOTCOREBIN}/../BkgdSysts/config/multib_ichep2k16_ttbar.json")
-parser.add_option("--weights", help="String of weights to apply for each event", default="1.0")
+parser.add_option("--event_weights", help="String of weights to apply for each event", default="1.0")
+parser.add_option("--lumi_weights", help="Luminosity weight JSON file", default="config/weights.json")
 parser.add_option("--input", help="Directory of input ROOT files", default="${ROOTCOREBIN}/../BkgdSysts/input/")
 parser.add_option("--output", help="Directory of output files", default="${ROOTCOREBIN}/../BkgdSysts/output/")
 parser.add_option("--systfile", help="Name of output .root file with systematics", default="bkgsyst.root")
@@ -70,11 +83,13 @@ for did in trees:
 
 # Loop over the different regions.
 
+lumiweights = json.load(open(options.lumi_weights))
 outfile = ROOT.TFile(options.output+options.systfile,"recreate")
 
 for (syst,sets) in systematics.items():
     logging.info("syst\t%s",syst)
     hist = ROOT.TH1F(syst,syst,21,0.0,21)
+    raw = ROOT.TH1F(syst+"_raw",syst+"_raw",56,0.0,56)
 
     for region in cutstrings:
         logging.info("region\t\t%s",region)
@@ -101,10 +116,13 @@ for (syst,sets) in systematics.items():
                 # So, we want to know the yield for each of those regions, in each sample:
                 nEvents=0.0
                 for did in trees:
+                    lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
                         #nEvents += trees[did].GetEntries(cuts+options.weights)
                         #print apply_selection(trees[did],cuts,options.weights)
-                        nEvents += apply_selection(trees[did],cuts,options.weights)
+                        nEvents += apply_selection(trees[did],cuts,options.event_weights)
+                        nEvents*=lumi
+                        raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
                         
                 if(options.verbose): logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
@@ -117,9 +135,11 @@ for (syst,sets) in systematics.items():
         for (reg,nEvents) in yields.items():
             if(reg=="CR"): continue
             if "varied_"+region+"_"+reg in tfs:
-                hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
+                if tfs["nominal_"+region+"_"+reg] !=0 :
+                    hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
             elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
-                hist.Fill(region+"_"+reg,fabs(tfs["varyUp"]/tfs["varyDown"])*100.0)
+                if (fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])) !=0:
+                    hist.Fill(region+"_"+reg,2.0*fabs((fabs(tfs["varyUp_"+region+"_"+reg])-(fabs(tfs["varyDown_"+region+"_"+reg])))/(fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])))*100.0)
 
     hist.SetStats(0)
     hist.GetXaxis().SetTitle("Region")
@@ -129,7 +149,8 @@ for (syst,sets) in systematics.items():
     hist.SetMarkerStyle(5)
     hist.SetMarkerSize(1)
 
-    canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 800, 600)
+    canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 1400, 1050)
+#    canvas = ROOT.TCanvas('draw', 'draw', 0, 0, 5000, 1050)
     pad = ROOT.TPad()
     canvas.cd()
     hist.Draw("hist P")
@@ -149,6 +170,28 @@ for (syst,sets) in systematics.items():
 
     hist.Write();
     canvas.SaveAs("output/"+syst+".pdf")
+
+    canvas.Clear()
+    raw.SetStats(0)
+    raw.GetXaxis().SetTitle("Region")
+    raw.GetXaxis().SetTitleOffset(1.33)
+    raw.GetYaxis().SetTitleOffset(1.33)
+    raw.GetYaxis().SetTitle("Raw Yield")
+    raw.Draw("hist")
+    if(options.atlas):
+        l=TLatex()
+        l.SetNDC()
+        l.SetTextFont(72)
+        l.DrawLatex(0.15,0.85,"ATLAS")
+        p=TLatex()
+        p.SetNDC();
+        p.SetTextFont(42)
+        p.DrawLatex(0.28,0.85,"Internal");
+        q=TLatex()
+        q.SetNDC();
+        p.SetTextFont(41)
+        q.DrawLatex(0.15,0.80,syst);
+    canvas.SaveAs("output/"+syst+"_raw_yields.pdf")
 
 outfile.Write()
 outfile.Close()
