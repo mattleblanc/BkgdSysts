@@ -116,8 +116,7 @@ for (syst,sets) in systematics.items():
                 for did in trees:
                     lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
-                        nEvents += apply_selection(trees[did],cuts,options.event_weights)
-                        nEvents*=lumi
+                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
                         
