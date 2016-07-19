@@ -135,7 +135,7 @@ for (syst,sets) in systematics.items():
                     hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
             elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
                 if (fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])) !=0:
-                    hist.Fill(region+"_"+reg,2.0*fabs((fabs(tfs["varyUp_"+region+"_"+reg])-(fabs(tfs["varyDown_"+region+"_"+reg])))/(fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])))*100.0)
+                    hist.Fill(region+"_"+reg,2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])*100.0)
 
     hist.SetStats(0)
     hist.GetXaxis().SetTitle("Region")
@@ -172,7 +172,7 @@ for (syst,sets) in systematics.items():
     raw.GetXaxis().SetTitleOffset(1.33)
     raw.GetYaxis().SetTitleOffset(1.33)
     raw.GetYaxis().SetTitle("Raw Yield")
-    raw.Draw("hist")
+    raw.Draw("hbar")
     if options.atlas :
         l=TLatex()
         l.SetNDC()
