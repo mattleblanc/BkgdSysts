@@ -89,13 +89,13 @@ for (syst,sets) in systematics.items():
     hist = ROOT.TH1F(syst,syst,21,0.0,21)
     raw = ROOT.TH1F(syst+"_raw",syst+"_raw",56,0.0,56)
 
-    for region in cutstrings:
+    for region in sorted(cutstrings):
         logging.info("region\t\t%s",region)
 
         tfs = {}
-        for (scheme,samples) in sets.items():
+        for (scheme,samples) in sorted(sets.items()):
             yields = {}
-            for (subreg,cuts) in cutstrings[region].items():
+            for (subreg,cuts) in sorted(cutstrings[region].items()):
                 regtype="NULL"
                 # string.find returns -1 if not match, or the index of the position of the match if there is one:
                 # 0 means the string starts with the match!
@@ -128,7 +128,7 @@ for (syst,sets) in systematics.items():
                 tfs[scheme+"_"+region+"_"+reg] = yields[reg]/yields["CR"]
 
         iBin=0
-        for (reg,nEvents) in yields.items():
+        for (reg,nEvents) in sorted(yields.items()):
             if(reg=="CR"): continue
             if "varied_"+region+"_"+reg in tfs:
                 if tfs["nominal_"+region+"_"+reg] !=0 :
