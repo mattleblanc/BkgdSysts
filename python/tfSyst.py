@@ -73,12 +73,12 @@ trees = {}
 for fname in glob.glob(options.input):
     for did in dids:
         if(string.find(fname,did)>=0):
-            logging.info("BkgdSyst\tfname is \t%s\t for did\t%s",fname,did)
+            if options.verbose : logging.info("BkgdSyst\tfname is \t%s\t for did\t%s",fname,did)
             files[did]=ROOT.TFile.Open(fname)
             trees[did]=files[did].Get('nominal')
         
 for did in trees:
-    if(options.verbose): logging.info("Tree for DID\t%s\thas\t%s\tentries.",did,trees[did].GetEntries())
+    if options.verbose : logging.info("Tree for DID\t%s\thas\t%s\tentries.",did,trees[did].GetEntries())
 
 # Loop over the different regions.
 lumiweights = json.load(open(options.lumi_weights))
@@ -109,7 +109,7 @@ for (syst,sets) in systematics.items():
                 if string.find(subreg,"VR2")>=0 :
                     regtype="VR2"
                         
-                if(options.verbose): logging.info("Region Type\t\t\t%s",regtype)
+                if options.verbose : logging.info("Region Type\t\t\t%s",regtype)
                         
                 # So, we want to know the yield for each of those regions, in each sample:
                 nEvents=0.0
@@ -121,7 +121,7 @@ for (syst,sets) in systematics.items():
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
                         
-                if(options.verbose): logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
+                if options.verbose : logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
 
             for (reg,nEvents) in yields.items():
                 if(reg == "CR"): continue
@@ -149,7 +149,7 @@ for (syst,sets) in systematics.items():
     pad = ROOT.TPad()
     canvas.cd()
     hist.Draw("hist P")
-    if(options.atlas):
+    if options.atlas :
         l=TLatex()
         l.SetNDC()
         l.SetTextFont(72)
@@ -164,7 +164,7 @@ for (syst,sets) in systematics.items():
         q.DrawLatex(0.15,0.80,syst);
 
     hist.Write();
-    canvas.SaveAs("output/"+syst+".pdf")
+    canvas.SaveAs(options.output+syst+".pdf")
 
     canvas.Clear()
     raw.SetStats(0)
@@ -173,7 +173,7 @@ for (syst,sets) in systematics.items():
     raw.GetYaxis().SetTitleOffset(1.33)
     raw.GetYaxis().SetTitle("Raw Yield")
     raw.Draw("hist")
-    if(options.atlas):
+    if options.atlas :
         l=TLatex()
         l.SetNDC()
         l.SetTextFont(72)
@@ -186,7 +186,7 @@ for (syst,sets) in systematics.items():
         q.SetNDC();
         p.SetTextFont(41)
         q.DrawLatex(0.15,0.80,syst);
-    canvas.SaveAs("output/"+syst+"_raw_yields.pdf")
+    canvas.SaveAs(options.output+syst+"_raw_yields.pdf")
 
 outfile.Write()
 outfile.Close()
