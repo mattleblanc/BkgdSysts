@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import math
 import re
 import string
 import glob
@@ -37,6 +38,26 @@ def get_scaleFactor(did, weights):
   scaleFactor *= weights[did[:6]].get('filter efficiency')
   scaleFactor *= weights[did[:6]].get('k-factor')
   return scaleFactor
+
+def apply_sos_weight(did):
+# sc_6c_1k_radHi = 2.06406 sc_1k_1k5_radHi = 2.17811 sc_1k5_radHi = 2.51412
+# sc_6c_1k_radLo = 1.89614 sc_1k_1k5_radLo = 1.58018 sc_1k5_radLo = 1.52705
+# sc_6c_1k_PowHPP = 2.00657 sc_1k_1k5_PowHPP = 2.14921 sc_1k5_radHi = 2.31007
+    weight = 1.0
+    if did=='407009' : weight = 1.00000
+    if did=='407010' : weight = 1.00000
+    if did=='407011' : weight = 1.00000
+    if did=='407030' : weight = 2.06406
+    if did=='407031' : weight = 2.17811
+    if did=='407032' : weight = 2.51412
+    if did=='407034' : weight = 1.89614
+    if did=='407035' : weight = 1.58018
+    if did=='407036' : weight = 1.52705
+    if did=='407037' : weight = 2.00657
+    if did=='407038' : weight = 2.14921
+    if did=='407039' : weight = 2.31007
+
+    return weight
 
 # Parse command-line arguments from the user ...
 parser = OptionParser()
@@ -84,6 +105,7 @@ for did in trees:
 lumiweights = json.load(open(options.lumi_weights))
 outfile = ROOT.TFile(options.output+options.systfile,"recreate")
 
+sr_systs = {}
 for (syst,sets) in systematics.items():
     logging.info("syst\t%s",syst)
     hist = ROOT.TH1F(syst,syst,21,0.0,21)
@@ -116,8 +138,9 @@ for (syst,sets) in systematics.items():
                 for did in trees:
                     lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
-                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi
+                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi*apply_sos_weight(did[:6])
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
+                        #logging.info("nEvents\t%s\traw\t%s",nEvents,apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
                         
                 if options.verbose : logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
@@ -132,9 +155,13 @@ for (syst,sets) in systematics.items():
             if "varied_"+region+"_"+reg in tfs:
                 if tfs["nominal_"+region+"_"+reg] !=0 :
                     hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
+                    #if reg=="SR":
+                    sr_systs[syst,region+"_"+reg]=fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg]))
             elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
                 if (fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])) !=0:
                     hist.Fill(region+"_"+reg,2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])*100.0)
+                    #if reg=="SR":
+                    sr_systs[syst,region+"_"+reg]=2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])
 
     hist.SetStats(0)
     hist.GetXaxis().SetTitle("Region")
@@ -164,6 +191,7 @@ for (syst,sets) in systematics.items():
 
     hist.Write();
     canvas.SaveAs(options.output+syst+".pdf")
+    canvas.SaveAs(options.output+syst+".root")
 
     canvas.Clear()
     raw.SetStats(0)
@@ -186,6 +214,24 @@ for (syst,sets) in systematics.items():
         p.SetTextFont(41)
         q.DrawLatex(0.15,0.80,syst);
     canvas.SaveAs(options.output+syst+"_raw_yields.pdf")
+    canvas.SaveAs(options.output+syst+"_raw_yields.root")
+
+#outfile.Write()
+#outfile.Close()
+
+print sr_systs
+
+total_syst = ROOT.TH1F('total','total',21,0.0,21)
+for syst,reg in sr_systs:
+    total_syst.Fill(reg,sr_systs[syst,reg]*sr_systs[syst,reg])
+
+for bin in range(1,total_syst.GetNbinsX() + 1):
+    total_syst.SetBinContent(bin,math.sqrt(total_syst.GetBinContent(bin)))
+
+total_syst.Draw("hist")
+total_syst.Write();
+canvas.SaveAs(options.output+"total_syst.pdf")
+canvas.SaveAs(options.output+"total_syst.root")
 
 outfile.Write()
 outfile.Close()
