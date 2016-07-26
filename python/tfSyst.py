@@ -106,6 +106,7 @@ lumiweights = json.load(open(options.lumi_weights))
 outfile = ROOT.TFile(options.output+options.systfile,"recreate")
 
 sr_systs = {}
+reg_yields = {}
 for (syst,sets) in systematics.items():
     logging.info("syst\t%s",syst)
     hist = ROOT.TH1F(syst,syst,21,0.0,21)
@@ -142,8 +143,10 @@ for (syst,sets) in systematics.items():
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         #logging.info("nEvents\t%s\traw\t%s",nEvents,apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
+                        #if(scheme=='nominal') reg_yields[syst,region]=nEvents
                         
                 if options.verbose : logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
+                if(scheme=='nominal' and regtype=='SR'): reg_yields[syst,region] = nEvents
 
             for (reg,nEvents) in yields.items():
                 if(reg == "CR"): continue
@@ -155,13 +158,13 @@ for (syst,sets) in systematics.items():
             if "varied_"+region+"_"+reg in tfs:
                 if tfs["nominal_"+region+"_"+reg] !=0 :
                     hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
-                    #if reg=="SR":
-                    sr_systs[syst,region+"_"+reg]=fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg]))
+                    if reg=="SR":
+                        sr_systs[syst,region+"_"+reg]=fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg]))
             elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
                 if (fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])) !=0:
                     hist.Fill(region+"_"+reg,2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])*100.0)
-                    #if reg=="SR":
-                    sr_systs[syst,region+"_"+reg]=2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])
+                    if reg=="SR":
+                        sr_systs[syst,region+"_"+reg]=2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])
 
     hist.SetStats(0)
     hist.GetXaxis().SetTitle("Region")
@@ -219,14 +222,47 @@ for (syst,sets) in systematics.items():
 #outfile.Write()
 #outfile.Close()
 
-print sr_systs
-
 total_syst = ROOT.TH1F('total','total',21,0.0,21)
-for syst,reg in sr_systs:
-    total_syst.Fill(reg,sr_systs[syst,reg]*sr_systs[syst,reg])
+total_syst_bb = ROOT.TH1F('total_bb','total_bb',21,0.0,21)
+total_syst_cc = ROOT.TH1F('total_cc','total_cc',21,0.0,21)
+total_syst_ll = ROOT.TH1F('total_ll','total_ll',21,0.0,21)
 
-for bin in range(1,total_syst.GetNbinsX() + 1):
-    total_syst.SetBinContent(bin,math.sqrt(total_syst.GetBinContent(bin)))
+#total_yield = ROOT.TH1F('yield','yield',21,0.0,21)
+total_yield_bb = ROOT.TH1F('yield_bb','yield_bb',21,0.0,21)
+total_yield_cc = ROOT.TH1F('yield_cc','yield_cc',21,0.0,21)
+total_yield_ll = ROOT.TH1F('yield_ll','yield_ll',21,0.0,21)
+
+print "reg yields",reg_yields
+
+for syst,reg in sr_systs:
+    
+    print reg
+    if(string.find(reg,'ttbb')>=0): total_syst_bb.Fill(reg[:-5],sr_systs[syst,reg]*sr_systs[syst,reg])
+    if(string.find(reg,'ttcc')>=0): total_syst_cc.Fill(reg[:-5],sr_systs[syst,reg]*sr_systs[syst,reg])
+    if(string.find(reg,'ttll')>=0): total_syst_ll.Fill(reg[:-5],sr_systs[syst,reg]*sr_systs[syst,reg])
+    #total_syst.Fill(reg,sr_systs[syst,reg]*sr_systs[syst,reg])
+
+    print reg,reg_yields[syst,reg[:-3]]
+
+    if(string.find(reg,'ttbb')>=0): total_yield_bb.Fill(reg[:-8],reg_yields[syst,reg[:-3]])
+    if(string.find(reg,'ttcc')>=0): total_yield_cc.Fill(reg[:-8],reg_yields[syst,reg[:-3]])
+    if(string.find(reg,'ttll')>=0): total_yield_ll.Fill(reg[:-8],reg_yields[syst,reg[:-3]])
+
+#reg_fracs[syst,reg[:-6],reg[-5:]]=reg_yields[syst,reg]/
+    
+for bin in range(1,total_syst_bb.GetNbinsX() + 1):
+    total_yield = total_yield_bb.GetBinContent(bin)+total_yield_cc.GetBinContent(bin)+total_yield_ll.GetBinContent(bin)
+    print total_yield
+    print total_yield_bb.GetBinContent(bin),total_yield_cc.GetBinContent(bin),total_yield_ll.GetBinContent(bin)
+    if total_yield != 0:
+        frac_bb = total_yield_bb.GetBinContent(bin)/total_yield
+        frac_cc = total_yield_cc.GetBinContent(bin)/total_yield
+        frac_ll = total_yield_ll.GetBinContent(bin)/total_yield
+        print frac_bb,frac_cc,frac_ll
+        total_syst.SetBinContent(bin,math.sqrt(total_syst_bb.GetBinContent(bin)*total_syst_bb.GetBinContent(bin)*(frac_bb)+total_syst_cc.GetBinContent(bin)*total_syst_cc.GetBinContent(bin)*(frac_cc)+total_syst_ll.GetBinContent(bin)*total_syst_ll.GetBinContent(bin)*(frac_ll)))
+        total_syst.GetXaxis().SetBinLabel(bin,total_yield_cc.GetXaxis().GetBinLabel(bin))
+
+#total_syst.Print()
 
 total_syst.Draw("hist")
 total_syst.Write();
