@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python python/tfSyst.py \
+python python/yieldSyst.py \
     --cutstrings cutstrings/multib_ichep2k16_regions_2b.json \
     --systs config/multib_ichep2k16_singletop.json \
     --lumi_weights 'config/weights.json' \
