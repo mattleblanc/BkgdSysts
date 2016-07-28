@@ -1,0 +1,15 @@
+{
+	"MCGenerator":{
+		"nominal":["410004"],
+		"varied":["410003"]
+	},
+	"PartonShower":{
+		"nominal":["410000"],
+		"varied":["410004"]
+	},
+	"ISRFSR":{
+		"nominal":["410000"],
+		"varyUp":["410001"],
+		"varyDown":["410002"]
+	}
+}
