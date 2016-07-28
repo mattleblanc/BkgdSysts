@@ -9,4 +9,5 @@ python python/tfSyst.py \
     --output 'output_ttbar/' \
     --systfile 'bkgsyst_multib_ttbar.root' \
     --atlas \
+    --splitFlavour \
     --verbose
