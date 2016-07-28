@@ -142,30 +142,23 @@ for (syst,sets) in systematics.items():
                     if(did in samples):
                         nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi*apply_sos_weight(did[:6])
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
-                        #logging.info("nEvents\t%s\traw\t%s",nEvents,apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
-                        #if(scheme=='nominal') reg_yields[syst,region]=nEvents
                         
                 if options.verbose : logging.info("DID\t\t\t\t\t%s\t%s",scheme,nEvents)
                 if(scheme=='nominal' and regtype=='SR'): reg_yields[syst,region] = nEvents
 
             for (reg,nEvents) in yields.items():
-
-                if(reg == "CR"): continue
-                tfs[scheme+"_"+region+"_"+reg] = yields[reg]/yields["CR"]
+                tfs[scheme+"_"+region+"_"+reg] = yields[reg]
 
         iBin=0
         for (reg,nEvents) in sorted(yields.items()):
-            if(reg=="CR"): continue
             if "varied_"+region+"_"+reg in tfs:
                 if tfs["nominal_"+region+"_"+reg] !=0 :
                     hist.Fill(region+"_"+reg,fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg])*100.0))
-                    #if reg=="SR":
                     sr_systs[syst,region+"_"+reg]=fabs(((tfs["nominal_"+region+"_"+reg]-tfs["varied_"+region+"_"+reg])/tfs["nominal_"+region+"_"+reg]))
             elif "varyUp_"+region+"_"+reg and "varyDown_"+region+"_"+reg in tfs:   
                 if (fabs(tfs["varyUp_"+region+"_"+reg])+fabs(tfs["varyDown_"+region+"_"+reg])) !=0:
                     hist.Fill(region+"_"+reg,2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])*100.0)
-                    #if reg=="SR":
                     sr_systs[syst,region+"_"+reg]=2.0*fabs(tfs["varyUp_"+region+"_"+reg]-tfs["varyDown_"+region+"_"+reg])/fabs(tfs["varyUp_"+region+"_"+reg]+tfs["varyDown_"+region+"_"+reg])
 
     hist.SetStats(0)
@@ -243,22 +236,14 @@ if options.splitFlavour :
         if(string.find(reg,'ttll')>=0): total_syst_ll.Fill(reg[:-5],sr_systs[syst,reg]*sr_systs[syst,reg])
     #total_syst.Fill(reg,sr_systs[syst,reg]*sr_systs[syst,reg])
         print reg
-        if(string.find(reg,'Gbb')>=0 and string.find(reg,'SR')>=0):
+        if(string.find(reg,'Gbb')>=0):
             if(string.find(reg,'ttbb')>=0): total_yield_bb.Fill(reg[:-8]+reg[10:],reg_yields[syst,reg[:-3]])
             if(string.find(reg,'ttcc')>=0): total_yield_cc.Fill(reg[:-8]+reg[10:],reg_yields[syst,reg[:-3]])
             if(string.find(reg,'ttll')>=0): total_yield_ll.Fill(reg[:-8]+reg[10:],reg_yields[syst,reg[:-3]])
-        if(string.find(reg,'Gbb')>=0 and string.find(reg,'VR')>=0):
-            if(string.find(reg,'ttbb')>=0): total_yield_bb.Fill(reg[:-9]+reg[10:],reg_yields[syst,reg[:-4]])
-            if(string.find(reg,'ttcc')>=0): total_yield_cc.Fill(reg[:-9]+reg[10:],reg_yields[syst,reg[:-4]])
-            if(string.find(reg,'ttll')>=0): total_yield_ll.Fill(reg[:-9]+reg[10:],reg_yields[syst,reg[:-4]])
-        if(string.find(reg,'Gtt')>=0 and string.find(reg,'SR')>=0):
+        if(string.find(reg,'Gtt')>=0):
             if(string.find(reg,'ttbb')>=0): total_yield_bb.Fill(reg[:-8]+reg[13:],reg_yields[syst,reg[:-3]])
             if(string.find(reg,'ttcc')>=0): total_yield_cc.Fill(reg[:-8]+reg[13:],reg_yields[syst,reg[:-3]])
             if(string.find(reg,'ttll')>=0): total_yield_ll.Fill(reg[:-8]+reg[13:],reg_yields[syst,reg[:-3]])
-        if(string.find(reg,'Gtt')>=0 and string.find(reg,'VR')>=0):
-            if(string.find(reg,'ttbb')>=0): total_yield_bb.Fill(reg[:-9]+reg[13:],reg_yields[syst,reg[:-4]])
-            if(string.find(reg,'ttcc')>=0): total_yield_cc.Fill(reg[:-9]+reg[13:],reg_yields[syst,reg[:-4]])
-            if(string.find(reg,'ttll')>=0): total_yield_ll.Fill(reg[:-9]+reg[13:],reg_yields[syst,reg[:-4]])
 
     for bin in range(1,total_syst_bb.GetNbinsX() + 1):
         total_yield = total_yield_bb.GetBinContent(bin)+total_yield_cc.GetBinContent(bin)+total_yield_ll.GetBinContent(bin)
