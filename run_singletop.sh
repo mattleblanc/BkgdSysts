@@ -1,11 +1,11 @@
 #!/bin/bash
 
 python python/yieldSyst.py \
-    --cutstrings cutstrings/multib_ichep2k16_regions_2b.json \
-    --systs config/multib_ichep2k16_singletop.json \
-    --lumi_weights 'config/weights.json' \
+    --cutstrings cutstrings/multib_ichep2k16_regions.json \
+    --systs config/multib_ichep2k16_singletop_ISRFSR.json \
+    --lumi_weights 'config/theory_weights.json' \
     --event_weights 'weight_mc*weight_jvt*weight_muon*weight_elec*weight_btag' \
-    --input '/global/mleblanc/multib_ichep16/bgsyst/merge/*.root' \
+    --input '/faxbox2/user/mleblanc/multib_ichep2k16/theory/theorysingletop.*.root' \
     --output 'output_singletop/' \
     --systfile 'bkgsyst_multib_singletop.root' \
     --atlas \

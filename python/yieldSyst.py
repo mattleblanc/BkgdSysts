@@ -30,7 +30,7 @@ def apply_selection(tree, cuts, eventWeightBranch):
 
 def get_scaleFactor(did, weights):
   scaleFactor = 1.0
-  cutflow = weights[did[:6]].get('numevents')
+  cutflow = weights[did[:6]].get('num events')
   if cutflow == 0:
     raise ValueError('Num events = 0!')
   scaleFactor /= cutflow
@@ -140,7 +140,7 @@ for (syst,sets) in systematics.items():
                 for did in trees:
                     lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
-                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi*apply_sos_weight(did[:6])
+                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi #*apply_sos_weight(did[:6])
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
                         

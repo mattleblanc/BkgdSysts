@@ -20,17 +20,19 @@ global canvas
 def apply_selection(tree, cuts, eventWeightBranch):
     canvas = ROOT.TCanvas('test', 'test', 200, 10, 100, 100)
     tree.Draw(eventWeightBranch, '{0:s}*{1:s}'.format(cuts,eventWeightBranch))
+    #tree.Draw("gen_filt_ht", '{0:s}*{1:s}'.format(cuts,eventWeightBranch))
     weightedCount = 0
     # get drawn histogram
     if 'htemp' in canvas:
       htemp = canvas.GetPrimitive('htemp')
       weightedCount = htemp.Integral()
+    #canvas.SaveAs(tree+".pdf")
     canvas.Clear()
     return weightedCount
 
 def get_scaleFactor(did, weights):
   scaleFactor = 1.0
-  cutflow = weights[did[:6]].get('numevents')
+  cutflow = weights[did[:6]].get('num events')
   if cutflow == 0:
     raise ValueError('Num events = 0!')
   scaleFactor /= cutflow
@@ -140,7 +142,7 @@ for (syst,sets) in systematics.items():
                 for did in trees:
                     lumi = get_scaleFactor(did,lumiweights)
                     if(did in samples):
-                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi#*apply_sos_weight(did[:6])
+                        nEvents += apply_selection(trees[did],cuts,options.event_weights)*lumi #*apply_sos_weight(did[:6])
                         raw.Fill(region+"_"+regtype+"_"+did, apply_selection(trees[did],cuts,'1.0'))
                         #logging.info("nEvents\t%s\traw\t%s",nEvents,apply_selection(trees[did],cuts,'1.0'))
                         yields[regtype] = nEvents
@@ -150,7 +152,6 @@ for (syst,sets) in systematics.items():
                 if(scheme=='nominal' and regtype=='SR'): reg_yields[syst,region] = nEvents
 
             for (reg,nEvents) in yields.items():
-
                 if(reg == "CR"): continue
                 tfs[scheme+"_"+region+"_"+reg] = yields[reg]/yields["CR"]
 

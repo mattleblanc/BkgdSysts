@@ -1,0 +1,20 @@
+    {
+    "Gtt_0l_A_ttll":{
+        "SR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=2000.0 && jets_n>=8 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 0 && trigger[1] && tst_clean==1)",
+	    "CR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && met>=250.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 0 && trigger[1] && tst_clean==1)",
+        "VR1_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=200.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 0 && trigger[1] && tst_clean==1)",
+        "VR2_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=1250.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=0.0 && ttbar_class == 0 && trigger[1] && tst_clean==1)"
+    },
+    "Gtt_0l_A_ttcc":{
+        "SR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=2000.0 && jets_n>=8 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == -1 && trigger[1] && tst_clean==1)",
+        "CR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && met>=250.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == -1 && trigger[1] && tst_clean==1)",
+        "VR1_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=200.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == -1 && trigger[1] && tst_clean==1)",
+        "VR2_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=1250.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=0.0 && ttbar_class == -1 && trigger[1] && tst_clean==1)"
+    },
+    "Gtt_0l_A_ttbb":{
+        "SR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=2000.0 && jets_n>=8 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 1 && trigger[1] && tst_clean==1)",
+        "CR_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && met>=250.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 1 && trigger[1] && tst_clean==1)",
+        "VR1_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=200.0 && meff_incl>=1750.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=200.0 && ttbar_class == 1 && trigger[1] && tst_clean==1)",
+        "VR2_Gtt_0l_A":"((signal_electrons_n + signal_muons_n) == 1 && mT<=150.0 && mTb_min>=80.0 && met>=400.0 && meff_incl>=1250.0 && jets_n>=7 && bjets_n>=2 && MJSum_rc_r08pt10>=0.0 && ttbar_class == 1 && trigger[1] && tst_clean==1)"
+    }
+} 
